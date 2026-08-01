@@ -37,6 +37,16 @@ export default function Home() {
               />
             </div>
           </div>
+
+          <a
+            href="http://localhost:4000"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900/60 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100"
+          >
+            🖥️ 프로그램 대시보드 열기
+            <span className="text-xs font-normal text-neutral-500">(로컬 전용 · localhost:4000)</span>
+          </a>
         </div>
       </header>
 
