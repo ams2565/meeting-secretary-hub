@@ -79,6 +79,13 @@ export const departments: Department[] = [
         status: "live",
         href: "/tools/mcp-builder",
       },
+      {
+        slug: "app-builder",
+        name: "App Builder",
+        description: "대화로 작은 웹 도구를 함께 만들고 실제 주소로 배포",
+        status: "live",
+        href: "/tools/app-builder",
+      },
     ],
   },
   {
