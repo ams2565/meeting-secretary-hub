@@ -35,6 +35,8 @@ export default function ContentPlanPage() {
     }
   }
 
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m.content);
+
   return (
     <div className="flex flex-1 flex-col bg-neutral-950">
       <header className="border-b border-neutral-800 px-6 py-8 sm:px-10">
@@ -65,6 +67,14 @@ export default function ContentPlanPage() {
           sendButtonClass="bg-indigo-500 hover:bg-indigo-400"
           assistantRingClass="ring-indigo-500/20"
         />
+        {!loading && lastAssistant && (
+          <Link
+            href={{ pathname: "/tools/blog-writer", query: { summary: lastAssistant.content } }}
+            className="mt-4 inline-block w-fit rounded-lg border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-500"
+          >
+            이 콘텐츠 계획으로 블로그 글 작성 →
+          </Link>
+        )}
       </main>
     </div>
   );

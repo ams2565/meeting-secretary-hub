@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { streamFetch } from "@/lib/streamFetch";
 import type { ChatMessage } from "@/lib/chat";
 
-export default function PitchDeckPage() {
+function PitchDeckChat() {
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(searchParams.get("summary") ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,6 +38,28 @@ export default function PitchDeckPage() {
   }
 
   return (
+    <>
+      {error && (
+        <p className="mb-4 rounded-lg border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
+          {error}
+        </p>
+      )}
+      <ChatPanel
+        messages={messages}
+        input={input}
+        onInputChange={setInput}
+        onSend={handleSend}
+        loading={loading}
+        placeholder="예: 회의록 자동 요약 SaaS, 국내 스타트업 팀장급 타겟, 시드 단계"
+        sendButtonClass="bg-emerald-500 hover:bg-emerald-400"
+        assistantRingClass="ring-emerald-500/20"
+      />
+    </>
+  );
+}
+
+export default function PitchDeckPage() {
+  return (
     <div className="flex flex-1 flex-col bg-neutral-950">
       <header className="border-b border-neutral-800 px-6 py-8 sm:px-10">
         <div className="mx-auto max-w-3xl">
@@ -50,21 +74,9 @@ export default function PitchDeckPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 py-8 sm:px-10">
-        {error && (
-          <p className="mb-4 rounded-lg border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
-            {error}
-          </p>
-        )}
-        <ChatPanel
-          messages={messages}
-          input={input}
-          onInputChange={setInput}
-          onSend={handleSend}
-          loading={loading}
-          placeholder="예: 회의록 자동 요약 SaaS, 국내 스타트업 팀장급 타겟, 시드 단계"
-          sendButtonClass="bg-emerald-500 hover:bg-emerald-400"
-          assistantRingClass="ring-emerald-500/20"
-        />
+        <Suspense fallback={null}>
+          <PitchDeckChat />
+        </Suspense>
       </main>
     </div>
   );

@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { streamFetch } from "@/lib/streamFetch";
 import type { ChatMessage } from "@/lib/chat";
 
-export default function SopBuilderPage() {
+function SopBuilderChat() {
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(searchParams.get("summary") ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,6 +38,28 @@ export default function SopBuilderPage() {
   }
 
   return (
+    <>
+      {error && (
+        <p className="mb-4 rounded-lg border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
+          {error}
+        </p>
+      )}
+      <ChatPanel
+        messages={messages}
+        input={input}
+        onInputChange={setInput}
+        onSend={handleSend}
+        loading={loading}
+        placeholder="예: 신규 팀원 온보딩 절차 — 계정 발급, 툴 세팅, 첫 주 일정 안내까지"
+        sendButtonClass="bg-lime-500 hover:bg-lime-400"
+        assistantRingClass="ring-lime-500/20"
+      />
+    </>
+  );
+}
+
+export default function SopBuilderPage() {
+  return (
     <div className="flex flex-1 flex-col bg-neutral-950">
       <header className="border-b border-neutral-800 px-6 py-8 sm:px-10">
         <div className="mx-auto max-w-3xl">
@@ -50,21 +74,9 @@ export default function SopBuilderPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 py-8 sm:px-10">
-        {error && (
-          <p className="mb-4 rounded-lg border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
-            {error}
-          </p>
-        )}
-        <ChatPanel
-          messages={messages}
-          input={input}
-          onInputChange={setInput}
-          onSend={handleSend}
-          loading={loading}
-          placeholder="예: 신규 팀원 온보딩 절차 — 계정 발급, 툴 세팅, 첫 주 일정 안내까지"
-          sendButtonClass="bg-lime-500 hover:bg-lime-400"
-          assistantRingClass="ring-lime-500/20"
-        />
+        <Suspense fallback={null}>
+          <SopBuilderChat />
+        </Suspense>
       </main>
     </div>
   );
