@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
-import { Markdown } from "@/components/Markdown";
+import { CodePreviewBubble } from "@/components/CodePreviewBubble";
 import { streamFetch } from "@/lib/streamFetch";
-import { extractCodeBlock } from "@/lib/extractCode";
 import type { ChatMessage } from "@/lib/chat";
 
 export default function FrontendDesignPage() {
@@ -76,49 +75,17 @@ export default function FrontendDesignPage() {
           placeholder="예: 가격 플랜 3개를 비교하는 프라이싱 카드 섹션, 미니멀한 다크모드로"
           sendButtonClass="bg-purple-500 hover:bg-purple-400"
           assistantRingClass="ring-purple-500/20"
-          renderAssistant={(content, index, isStreamingThis) => {
-            const hasCode = content.includes("```");
-
-            if (isStreamingThis || !hasCode) {
-              return (
-                <pre className="max-h-[500px] overflow-auto whitespace-pre-wrap text-xs text-neutral-200">
-                  {isStreamingThis ? content : null}
-                  {!isStreamingThis && !hasCode ? <Markdown>{content}</Markdown> : null}
-                </pre>
-              );
-            }
-
-            const html = extractCodeBlock(content);
-            const showCode = codeIndices.has(index);
-
-            return (
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                    화면
-                  </span>
-                  <button
-                    onClick={() => toggleCode(index)}
-                    className="text-xs font-medium text-purple-400 hover:text-purple-300"
-                  >
-                    {showCode ? "미리보기로 전환" : "코드 보기"}
-                  </button>
-                </div>
-                {showCode ? (
-                  <pre className="max-h-[500px] overflow-auto rounded-lg border border-neutral-800 bg-neutral-950 p-3 text-xs text-neutral-100">
-                    <code>{html}</code>
-                  </pre>
-                ) : (
-                  <iframe
-                    title={`미리보기 ${index}`}
-                    srcDoc={html}
-                    sandbox="allow-scripts"
-                    className="h-[500px] w-full rounded-lg border border-neutral-800 bg-white"
-                  />
-                )}
-              </div>
-            );
-          }}
+          renderAssistant={(content, index, isStreamingThis) => (
+            <CodePreviewBubble
+              content={content}
+              index={index}
+              isStreamingThis={isStreamingThis}
+              codeIndices={codeIndices}
+              onToggle={toggleCode}
+              toggleTextClass="text-purple-400"
+              sandbox="allow-scripts"
+            />
+          )}
         />
       </main>
     </div>

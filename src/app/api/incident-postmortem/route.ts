@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { streamText } from "@/lib/streamText";
 
 export async function POST(req: NextRequest) {
-  const { incident } = await req.json();
+  const { messages } = await req.json();
 
-  if (!incident || typeof incident !== "string" || !incident.trim()) {
-    return NextResponse.json({ error: "사고 개요를 입력해주세요." }, { status: 400 });
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return NextResponse.json({ error: "대화 내용이 비어있습니다." }, { status: 400 });
   }
 
   return streamText({
     model: "claude-opus-5",
     max_tokens: 4096,
     system:
-      "당신은 SRE/운영 조직의 포스트모템 작성 전문가입니다. 사용자가 설명한 사고 정황을 바탕으로 " +
-      "비난하지 않는(blameless) 포스트모템 보고서를 한국어로 작성하세요.\n\n" +
-      "출력은 반드시 다음 형식을 따르세요:\n\n" +
+      "당신은 SRE/운영 조직의 포스트모템 작성 전문가입니다. 사용자와 대화하며 비난하지 " +
+      "않는(blameless) 포스트모템 보고서를 함께 완성해갑니다.\n\n" +
+      "대화형 모드: 사고 정황이 어느 정도 있으면 바로 아래 형식으로 작성하세요. 무슨 일이 " +
+      "있었는지조차 알 수 없을 정도로 막연하면, 먼저 1~2개만 물어보세요. 이미 보고서를 준 뒤 " +
+      "사용자가 추가 정보를 주면, 그것을 반영해 다시 제시하세요.\n\n" +
+      "결과물 형식:\n\n" +
       "## 요약\n(무슨 일이 있었는지 2~3문장)\n\n" +
       "## 영향 범위\n(누가/무엇이 얼마나 영향을 받았는지 — 제공된 정보 기준으로만)\n\n" +
       "## 타임라인\n| 시각 | 사건 |\n|---|---|\n(제공된 정보로 재구성. 정보가 부족하면 " +
@@ -25,11 +28,6 @@ export async function POST(req: NextRequest) {
       "## 배운 점\n(잘 대응한 부분과, 개선이 필요한 부분 모두)\n\n" +
       "제공되지 않은 세부사항(정확한 장애 원인, 담당자명 등)을 지어내지 말고, 정보가 부족하면 그렇다고 " +
       "명시하세요.",
-    messages: [
-      {
-        role: "user",
-        content: `사고 개요:\n${incident}`,
-      },
-    ],
+    messages,
   });
 }
