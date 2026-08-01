@@ -64,6 +64,8 @@ export default function FinanceModelPage() {
           placeholder="예: 회의록 자동 요약 SaaS, 월 구독료 2만원, 목표 1년차 500명 가입"
           sendButtonClass="bg-emerald-500 hover:bg-emerald-400"
           assistantRingClass="ring-emerald-500/20"
+          exportFormat="xlsx"
+          exportFilenamePrefix="3-Statements"
         />
       </main>
     </div>

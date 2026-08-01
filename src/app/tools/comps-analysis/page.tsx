@@ -64,6 +64,8 @@ export default function CompsAnalysisPage() {
           placeholder="예: 연매출 30억원, EBITDA 5억원인 B2B SaaS 기업 (비교기업 배수 있으면 함께 알려주세요)"
           sendButtonClass="bg-emerald-500 hover:bg-emerald-400"
           assistantRingClass="ring-emerald-500/20"
+          exportFormat="xlsx"
+          exportFilenamePrefix="Comps-Analysis"
         />
       </main>
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Markdown } from "@/components/Markdown";
 import { Spinner } from "@/components/Spinner";
+import { downloadAsWord, downloadAsExcel } from "@/lib/exportFile";
 import type { ChatMessage } from "@/lib/chat";
 
 export function ChatPanel({
@@ -15,6 +16,8 @@ export function ChatPanel({
   sendButtonClass,
   assistantRingClass,
   renderAssistant,
+  exportFormat,
+  exportFilenamePrefix,
 }: {
   messages: ChatMessage[];
   input: string;
@@ -25,6 +28,8 @@ export function ChatPanel({
   sendButtonClass: string;
   assistantRingClass: string;
   renderAssistant?: (content: string, index: number, loading: boolean) => React.ReactNode;
+  exportFormat?: "docx" | "xlsx";
+  exportFilenamePrefix?: string;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +71,22 @@ export function ChatPanel({
                     renderAssistant ? (
                       renderAssistant(m.content, i, isStreamingThis)
                     ) : (
-                      <Markdown>{m.content}</Markdown>
+                      <>
+                        <Markdown>{m.content}</Markdown>
+                        {exportFormat && !isStreamingThis && (
+                          <button
+                            onClick={() =>
+                              (exportFormat === "docx" ? downloadAsWord : downloadAsExcel)(
+                                m.content,
+                                `${exportFilenamePrefix ?? "결과"}-${i + 1}`,
+                              )
+                            }
+                            className="mt-3 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-neutral-100"
+                          >
+                            {exportFormat === "docx" ? "📄 Word 파일로 저장" : "📊 Excel 파일로 저장"}
+                          </button>
+                        )}
+                      </>
                     )
                   ) : (
                     <span className="flex items-center gap-2 text-sm text-neutral-500">

@@ -64,6 +64,8 @@ export default function DocxPage() {
           placeholder="예: 외주 개발 계약 해지 통보서 (기존 초안 있으면 함께 붙여넣어주세요)"
           sendButtonClass="bg-slate-500 hover:bg-slate-400"
           assistantRingClass="ring-slate-500/20"
+          exportFormat="docx"
+          exportFilenamePrefix="문서"
         />
       </main>
     </div>

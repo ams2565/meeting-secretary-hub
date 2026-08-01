@@ -64,6 +64,8 @@ export default function LboModelPage() {
           placeholder="예: 연매출 50억원, EBITDA 8억원인 B2B SaaS 기업 인수 검토"
           sendButtonClass="bg-emerald-500 hover:bg-emerald-400"
           assistantRingClass="ring-emerald-500/20"
+          exportFormat="xlsx"
+          exportFilenamePrefix="LBO-Model"
         />
       </main>
     </div>

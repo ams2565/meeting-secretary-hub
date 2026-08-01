@@ -64,6 +64,8 @@ export default function DcfModelPage() {
           placeholder="예: 회의록 자동 요약 SaaS, 연매출 3억, 매년 40% 성장 목표"
           sendButtonClass="bg-emerald-500 hover:bg-emerald-400"
           assistantRingClass="ring-emerald-500/20"
+          exportFormat="xlsx"
+          exportFilenamePrefix="DCF-Model"
         />
       </main>
     </div>
