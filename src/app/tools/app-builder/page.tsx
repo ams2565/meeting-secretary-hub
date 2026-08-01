@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { CodePreviewBubble } from "@/components/CodePreviewBubble";
 import { streamFetch } from "@/lib/streamFetch";
@@ -9,6 +9,7 @@ import { extractCodeBlock } from "@/lib/extractCode";
 import type { ChatMessage } from "@/lib/chat";
 
 type DeployState = { status: "idle" } | { status: "naming" } | { status: "deploying" } | { status: "done"; url: string } | { status: "error"; message: string };
+type DeployedApp = { slug: string; url: string };
 
 export default function AppBuilderPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -18,6 +19,41 @@ export default function AppBuilderPage() {
   const [codeIndices, setCodeIndices] = useState<Set<number>>(new Set());
   const [deployStates, setDeployStates] = useState<Record<number, DeployState>>({});
   const [deployNames, setDeployNames] = useState<Record<number, string>>({});
+  const [apps, setApps] = useState<DeployedApp[]>([]);
+  const [appsError, setAppsError] = useState("");
+  const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/app-builder/list")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.apps) setApps(data.apps);
+        else setAppsError(data.error ?? "목록을 불러오지 못했습니다.");
+      })
+      .catch(() => setAppsError("목록을 불러오지 못했습니다."));
+  }, []);
+
+  async function handleLoadApp(slug: string) {
+    setLoadingSlug(slug);
+    setError("");
+    try {
+      const res = await fetch(`/api/app-builder/load?slug=${encodeURIComponent(slug)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "앱을 불러오지 못했습니다.");
+
+      setMessages([
+        { role: "user", content: `기존에 배포한 "${slug}" 앱을 불러왔습니다. 이어서 수정하고 싶어요.` },
+        { role: "assistant", content: "```html\n" + data.html + "\n```" },
+      ]);
+      setCodeIndices(new Set());
+      setDeployStates({});
+      setDeployNames({ 1: slug });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "앱을 불러오지 못했습니다.");
+    } finally {
+      setLoadingSlug(null);
+    }
+  }
 
   async function handleSend() {
     const text = input.trim();
@@ -65,6 +101,10 @@ export default function AppBuilderPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "배포에 실패했습니다.");
       setDeployStates((prev) => ({ ...prev, [index]: { status: "done", url: data.url } }));
+      const slug = (data.url as string).replace(/\/$/, "").split("/").pop();
+      if (slug) {
+        setApps((prev) => [...prev.filter((a) => a.slug !== slug), { slug, url: data.url }]);
+      }
     } catch (err) {
       setDeployStates((prev) => ({
         ...prev,
@@ -88,6 +128,31 @@ export default function AppBuilderPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 py-8 sm:px-10">
+        {apps.length > 0 && (
+          <div className="mb-6">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">지금까지 만든 앱</p>
+            <div className="flex flex-wrap gap-2">
+              {apps.map((app) => (
+                <div
+                  key={app.slug}
+                  className="flex items-center gap-1.5 rounded-full border border-neutral-800 bg-neutral-900/60 py-1 pl-3 pr-1.5 text-xs"
+                >
+                  <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-neutral-300 hover:text-neutral-100">
+                    {app.slug}
+                  </a>
+                  <button
+                    onClick={() => handleLoadApp(app.slug)}
+                    disabled={loadingSlug === app.slug}
+                    className="rounded-full bg-orange-500/10 px-2 py-0.5 font-medium text-orange-400 hover:bg-orange-500/20 disabled:opacity-50"
+                  >
+                    {loadingSlug === app.slug ? "불러오는 중..." : "이어서 수정"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {appsError && <p className="mb-4 text-xs text-neutral-600">{appsError}</p>}
         {error && (
           <p className="mb-4 rounded-lg border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
             {error}

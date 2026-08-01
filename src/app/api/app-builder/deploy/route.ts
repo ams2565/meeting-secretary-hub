@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const REPO_OWNER = "ams2565";
-const REPO_NAME = "app-builder-outputs";
-const SITE_URL = "https://app-builder-outputs.vercel.app";
-
-function slugify(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+import { REPO_OWNER, REPO_NAME, SITE_URL, slugify } from "@/lib/appBuilderRepo";
 
 export async function POST(req: NextRequest) {
   const token = process.env.GITHUB_TOKEN;
