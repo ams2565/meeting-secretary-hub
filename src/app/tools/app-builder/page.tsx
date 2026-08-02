@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChatPanel } from "@/components/ChatPanel";
 import { CodePreviewBubble } from "@/components/CodePreviewBubble";
+import { Markdown } from "@/components/Markdown";
 import { streamFetch } from "@/lib/streamFetch";
-import { extractCodeBlock } from "@/lib/extractCode";
+import { extractCodeBlock, textBeforeCodeBlock } from "@/lib/extractCode";
 import type { ChatMessage } from "@/lib/chat";
 
 type DeployState = { status: "idle" } | { status: "naming" } | { status: "deploying" } | { status: "done"; url: string } | { status: "error"; message: string };
@@ -171,8 +172,15 @@ export default function AppBuilderPage() {
             const hasCode = content.includes("```");
             const deployState = deployStates[index] ?? { status: "idle" };
 
+            const preText = !isStreamingThis ? textBeforeCodeBlock(content) : "";
+
             return (
               <div>
+                {preText && (
+                  <div className="mb-3 border-b border-neutral-800 pb-3">
+                    <Markdown>{preText}</Markdown>
+                  </div>
+                )}
                 <CodePreviewBubble
                   content={content}
                   index={index}

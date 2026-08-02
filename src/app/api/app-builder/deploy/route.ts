@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
 
   const path = `${slug}/index.html`;
   const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const resolvedHtml = html.replaceAll("__APP_SLUG__", slug);
 
   const existing = await fetch(apiUrl, {
     headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" },
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" },
     body: JSON.stringify({
       message: existingData ? `Update ${slug}` : `Add ${slug}`,
-      content: Buffer.from(html, "utf-8").toString("base64"),
+      content: Buffer.from(resolvedHtml, "utf-8").toString("base64"),
       ...(existingData ? { sha: existingData.sha } : {}),
     }),
   });

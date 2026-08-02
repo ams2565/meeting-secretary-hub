@@ -11,3 +11,12 @@ export function extractCodeBlock(text: string): string {
 
   return text.trim();
 }
+
+// Returns any text before the first fenced code block (e.g. a research
+// summary written ahead of the generated code). Empty if the fence starts
+// at (or before) the beginning of the text.
+export function textBeforeCodeBlock(text: string): string {
+  const index = text.indexOf("```");
+  if (index <= 0) return "";
+  return text.slice(0, index).trim();
+}
