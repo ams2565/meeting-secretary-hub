@@ -12,14 +12,28 @@ import type { ChatMessage } from "@/lib/chat";
 type DeployState = { status: "idle" } | { status: "naming" } | { status: "deploying" } | { status: "done"; url: string } | { status: "error"; message: string };
 type DeployedApp = { slug: string; url: string };
 
+const DRAFT_KEY = "app-builder-draft";
+
+function loadDraft(): { messages: ChatMessage[]; deployNames: Record<number, string> } {
+  if (typeof window === "undefined") return { messages: [], deployNames: {} };
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return { messages: [], deployNames: {} };
+    const parsed = JSON.parse(raw);
+    return { messages: parsed.messages ?? [], deployNames: parsed.deployNames ?? {} };
+  } catch {
+    return { messages: [], deployNames: {} };
+  }
+}
+
 export default function AppBuilderPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadDraft().messages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [codeIndices, setCodeIndices] = useState<Set<number>>(new Set());
   const [deployStates, setDeployStates] = useState<Record<number, DeployState>>({});
-  const [deployNames, setDeployNames] = useState<Record<number, string>>({});
+  const [deployNames, setDeployNames] = useState<Record<number, string>>(() => loadDraft().deployNames);
   const [apps, setApps] = useState<DeployedApp[]>([]);
   const [appsError, setAppsError] = useState("");
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
@@ -33,6 +47,24 @@ export default function AppBuilderPage() {
       })
       .catch(() => setAppsError("목록을 불러오지 못했습니다."));
   }, []);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      window.localStorage.removeItem(DRAFT_KEY);
+      return;
+    }
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ messages, deployNames }));
+  }, [messages, deployNames]);
+
+  function handleStartOver() {
+    setMessages([]);
+    setInput("");
+    setError("");
+    setCodeIndices(new Set());
+    setDeployStates({});
+    setDeployNames({});
+    window.localStorage.removeItem(DRAFT_KEY);
+  }
 
   async function handleLoadApp(slug: string) {
     setLoadingSlug(slug);
@@ -154,6 +186,14 @@ export default function AppBuilderPage() {
           </div>
         )}
         {appsError && <p className="mb-4 text-xs text-neutral-600">{appsError}</p>}
+        {messages.length > 0 && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2">
+            <p className="text-xs text-neutral-500">진행 중이던 대화는 브라우저에 자동 저장됩니다.</p>
+            <button onClick={handleStartOver} className="text-xs font-medium text-neutral-400 hover:text-neutral-200">
+              새로 시작
+            </button>
+          </div>
+        )}
         {error && (
           <p className="mb-4 rounded-lg border border-red-900 bg-red-950/40 p-3 text-sm text-red-400">
             {error}
