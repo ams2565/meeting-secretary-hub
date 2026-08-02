@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/Markdown";
 import { Spinner } from "@/components/Spinner";
 import { downloadAsWord, downloadAsExcel } from "@/lib/exportFile";
@@ -32,10 +32,33 @@ export function ChatPanel({
   exportFilenamePrefix?: string;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  async function handleCopy(text: string, index: number) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        // best-effort fallback for browsers without Clipboard API access
+      }
+      document.body.removeChild(textarea);
+    }
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex((cur) => (cur === index ? null : cur)), 1500);
+  }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -73,18 +96,28 @@ export function ChatPanel({
                     ) : (
                       <>
                         <Markdown>{m.content}</Markdown>
-                        {exportFormat && !isStreamingThis && (
-                          <button
-                            onClick={() =>
-                              (exportFormat === "docx" ? downloadAsWord : downloadAsExcel)(
-                                m.content,
-                                `${exportFilenamePrefix ?? "결과"}-${i + 1}`,
-                              )
-                            }
-                            className="mt-3 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-neutral-100"
-                          >
-                            {exportFormat === "docx" ? "📄 Word 파일로 저장" : "📊 Excel 파일로 저장"}
-                          </button>
+                        {!isStreamingThis && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              onClick={() => handleCopy(m.content, i)}
+                              className="rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-neutral-100"
+                            >
+                              {copiedIndex === i ? "✅ 복사됨" : "📋 복사하기"}
+                            </button>
+                            {exportFormat && (
+                              <button
+                                onClick={() =>
+                                  (exportFormat === "docx" ? downloadAsWord : downloadAsExcel)(
+                                    m.content,
+                                    `${exportFilenamePrefix ?? "결과"}-${i + 1}`,
+                                  )
+                                }
+                                className="rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-700 hover:text-neutral-100"
+                              >
+                                {exportFormat === "docx" ? "📄 Word 파일로 저장" : "📊 Excel 파일로 저장"}
+                              </button>
+                            )}
+                          </div>
                         )}
                       </>
                     )
